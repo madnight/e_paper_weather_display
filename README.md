@@ -7,8 +7,6 @@ This project uses a Raspberry Pi to show weather updates and trash reminders on 
 ![Display Photo 1](https://github.com/AbnormalDistributions/e_paper_weather_display/blob/master/photos/photo1.jpg?raw=true)
 ![Display Photo 2](https://raw.githubusercontent.com/AbnormalDistributions/e_paper_weather_display/refs/heads/master/photos/photo2.jpg)
 
-If you find this project useful, consider [buying me a coffee ☕️](https://ko-fi.com/abnormaldistributions).
-
 ---
 
 ## Table of Contents
@@ -24,7 +22,6 @@ If you find this project useful, consider [buying me a coffee ☕️](https://ko
 - [Credit and License](#credit-and-license)
 
 ## What’s New (Version 2.0)
-- **Upgraded to OpenWeatherMap One Call API 3.0**: This update now uses the latest version of the OpenWeatherMap API (3.0), which may require users to update their subscriptions if they were previously using version 2.5. See the [OpenWeatherMap One Call Migration Guide](https://openweathermap.org/one-call-transfer) for details on the API changes and subscription requirements.
 - **Automatic Log Management**: Logs now rotate when they get too large, making maintenance easier.
 - **User-Friendly Settings**: All essential settings are grouped together for quick customization.
 - **More Reliable Error Handling**: Logs network and API errors for easier troubleshooting.
@@ -47,22 +44,34 @@ If you find this project useful, consider [buying me a coffee ☕️](https://ko
 1. **Clone the Project**:
    Open a terminal and run:
    ```bash
+   sudo apt-get install git
    git clone https://github.com/AbnormalDistributions/e_paper_weather_display.git
+   git clone https://github.com/waveshare/e-Paper.git
    cd e_paper_weather_display
    ```
 
 2. **Install Python Libraries**:
    ```bash
-   pip install pillow requests
+   sudo apt install python3-pillow python3-requests python3-pil
    ```
 
 ### Configuration
 1. **Add Your OpenWeatherMap API Key**:
    Sign up on [OpenWeatherMap](https://home.openweathermap.org/users/sign_up) for an API key, then open `weather.py` and add your API key where it says `API_KEY = 'XXXXXXXX'`.
 
-2. **Customize Your Settings**:
+2. **Settings**:
    Edit the following user-defined settings at the top of `weather.py`:
-   - `API_KEY`: Your OpenWeatherMap API key.
+
+   Replace this line in weather.py
+   ```py
+   lib_path = os.path.join(script_dir, 'lib')
+   ```
+   with
+   ```py
+   lib_path = "/home/pi/e-Paper/RaspberryPi_JetsonNano/python/lib" # Set according to your git download
+   ```
+
+   - `API_KEY`: Your OpenWeatherMap 2.5 API key.
    - `LOCATION`: Name of the location to display (e.g., `New Orleans`).
    - `LATITUDE` and `LONGITUDE`: Coordinates for weather updates (use [Google Maps](https://maps.google.com) to find these).
    - `UNITS`: Choose `'imperial'` (Fahrenheit) or `'metric'` (Celsius).
