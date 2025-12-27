@@ -2,41 +2,18 @@
 
 # E-paper Weather Display
 
-This project uses a Raspberry Pi to show weather updates and trash reminders on a Waveshare 7.5-inch e-paper display. It fetches weather data from OpenWeatherMap and refreshes the display at set intervals. Minimal energy consumption makes this setup ideal for continuous display without frequent updates.
+This project uses a Raspberry Pi 2 Zero WH (no soldering required) to show weather updates and trash reminders on a Waveshare 7.5-inch e-paper display. It fetches weather data from OpenWeatherMap and refreshes the display at set intervals. Minimal energy consumption makes this setup ideal for continuous display without frequent updates.
 
 ![Display Photo 1](https://github.com/AbnormalDistributions/e_paper_weather_display/blob/master/photos/photo1.jpg?raw=true)
 ![Display Photo 2](https://raw.githubusercontent.com/AbnormalDistributions/e_paper_weather_display/refs/heads/master/photos/photo2.jpg)
 
 ---
 
-## Table of Contents
-- [What’s New](#whats-new-version-20)
-- [Parts List](#parts-list)
-- [Setup Instructions](#setup-instructions)
-  - [Installation](#installation)
-  - [Configuration](#configuration)
-- [Running the Script](#running-the-script)
-- [Setting up Automatic Updates (Cron)](#setting-up-automatic-updates-optional)
-- [Repository Structure](#files-in-this-repository)
-- [Troubleshooting](#troubleshooting)
-- [Credit and License](#credit-and-license)
-
-## What’s New (Version 2.0)
-- **Automatic Log Management**: Logs now rotate when they get too large, making maintenance easier.
-- **User-Friendly Settings**: All essential settings are grouped together for quick customization.
-- **More Reliable Error Handling**: Logs network and API errors for easier troubleshooting.
-- **Improved Directory Handling**: The script finds the right directories automatically, without manual path adjustments.
-- **Trash Day Reminders**: Customize specific days to get reminders on the display.
-
-### Parts List
+## Parts List
 - **Waveshare 7.5-inch e-Paper HAT**: [Available on Amazon](https://amzn.to/3UBxuah) (affiliate link).  
-- **Raspberry Pi** (tested on a Pi 3; any model should work except the Pi Zero without soldered headers).
-- **SD card** (at least 8 GB).
+- **Raspberry Pi 2 Zero WH ** (any model should work except the Pi Zero without soldered headers).
+- **SD Card**
 - **Power supply** for the Raspberry Pi.
-- **5 x 7 inch photo frame** (thrift store find recommended).
-
-> **Note**: If you use this affiliate link, it helps support this project at no additional cost to you. Thank you!
-
 
 ## Setup Instructions
 
@@ -88,8 +65,8 @@ This project uses a Raspberry Pi to show weather updates and trash reminders on 
    ```
    This will fetch the weather data and update the display immediately.
 
-## Setting up Automatic Updates (Optional)
-You can set up a scheduled update every 15 minutes using `crontab`. This will make sure your display updates automatically.
+## Setting up Automatic Updates
+Set up a scheduled update every 15 minutes using `crontab`. This will make sure your display updates automatically.
 
 In the terminal, type:
 ```bash
@@ -101,18 +78,6 @@ Then, add the following line at the end of the file:
 ```
 - This command updates the display every 15 minutes.
 - Be sure to replace `/home/pi/e_paper_weather_display/` with the path where the project is stored, if different.
-
-## Files in This Repository
-- **weather.py**: Main script file that fetches weather data and updates the display.
-- **lib/**: Contains display drivers for the Waveshare e-paper display.
-- **font/** and **pic/**: Folders with fonts and images used by the display.
-- **photos/**: Sample images of the display in action.
-- **records.csv**: Optional log file for weather data if `CSV_OPTION` is enabled.
-
-## Troubleshooting
-- Make sure the **API_KEY** is correct and has permissions for OpenWeatherMap’s One Call API.
-- Confirm that required Python libraries (`pillow` and `requests`) are installed.
-- Double-check any custom paths used in `crontab` if the automatic updates aren’t working as expected.
 
 ## Credit and License
 - Icon designs by [Erik Flowers](https://erikflowers.github.io/weather-icons/), with some modifications.
