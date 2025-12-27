@@ -23,7 +23,10 @@ UNITS = 'imperial' # imperial or metric
 CSV_OPTION = True # if csv_option == True, a weather data will be appended to 'record.csv'
 TRASH_DAYS = [2]  # 0 = Monday, 6 = Sunday; Multiple days can be passed as a list
 
-BASE_URL = f'https://api.openweathermap.org/data/3.0/onecall'
+# Free API endpoints (no paid subscription required)
+CURRENT_URL = 'https://api.openweathermap.org/data/2.5/weather'
+FORECAST_URL = 'https://api.openweathermap.org/data/2.5/forecast'
+
 FONT_DIR = os.path.join(os.path.dirname(__file__), 'font')
 PIC_DIR = os.path.join(os.path.dirname(__file__), 'pic')
 ICON_DIR = os.path.join(PIC_DIR, 'icon')
@@ -60,33 +63,64 @@ font100 = ImageFont.truetype(os.path.join(FONT_DIR, 'Font.ttc'), 100)
 font160 = ImageFont.truetype(os.path.join(FONT_DIR, 'Font.ttc'), 160)
 COLORS = {'black': 'rgb(0,0,0)', 'white': 'rgb(255,255,255)', 'grey': 'rgb(235,235,235)'}
 
-# Fetch weather data
-def fetch_weather_data():
-    url = f"{BASE_URL}?lat={LATITUDE}&lon={LONGITUDE}&units={UNITS}&appid={API_KEY}"
+# Fetch current weather data (free API)
+def fetch_current_weather():
+    url = f"{CURRENT_URL}?lat={LATITUDE}&lon={LONGITUDE}&units={UNITS}&appid={API_KEY}"
     try:
         response = requests.get(url)
         response.raise_for_status()
-        logging.info("Weather data fetched successfully.")
+        logging.info("Current weather data fetched successfully.")
         return response.json()
     except requests.RequestException as e:
-        logging.error(f"Failed to fetch weather data: {e}")
+        logging.error(f"Failed to fetch current weather data: {e}")
         raise
 
-# Process weather data
-def process_weather_data(data):
+# Fetch forecast data (free API)
+def fetch_forecast():
+    url = f"{FORECAST_URL}?lat={LATITUDE}&lon={LONGITUDE}&units={UNITS}&appid={API_KEY}"
     try:
-        current = data['current']
-        daily = data['daily'][0]
+        response = requests.get(url)
+        response.raise_for_status()
+        logging.info("Forecast data fetched successfully.")
+        return response.json()
+    except requests.RequestException as e:
+        logging.error(f"Failed to fetch forecast data: {e}")
+        raise
+
+# Process weather data from free API
+def process_weather_data(current_data, forecast_data):
+    try:
+        main = current_data.get('main', {})
+        weather = current_data.get('weather', [{}])[0]
+        wind = current_data.get('wind', {})
+        
+        # Calculate today's high/low from forecast
+        today = datetime.now().strftime('%Y-%m-%d')
+        today_temps = []
+        today_pop = 0
+        
+        for item in forecast_data.get('list', []):
+            dt = datetime.fromtimestamp(item['dt'])
+            if dt.strftime('%Y-%m-%d') == today:
+                today_temps.append(item['main']['temp'])
+                # Get max precipitation probability for today
+                if 'pop' in item:
+                    today_pop = max(today_pop, item['pop'])
+        
+        # If no forecast data for today, use current temp as min/max
+        if not today_temps:
+            today_temps = [main.get('temp', 0)]
+        
         weather_data = {
-            "temp_current": current['temp'],
-            "feels_like": current['feels_like'],
-            "humidity": current['humidity'],
-            "wind": current['wind_speed'],
-            "report": current['weather'][0]['description'].title(),
-            "icon_code": current['weather'][0]['icon'],
-            "temp_max": daily['temp']['max'],
-            "temp_min": daily['temp']['min'],
-            "precip_percent": daily['pop'] * 100,
+            "temp_current": main.get('temp', 0),
+            "feels_like": main.get('feels_like', 0),
+            "humidity": main.get('humidity', 0),
+            "wind": wind.get('speed', 0),
+            "report": weather.get('description', 'Unknown').title(),
+            "icon_code": weather.get('icon', '01d'),
+            "temp_max": max(today_temps),
+            "temp_min": min(today_temps),
+            "precip_percent": today_pop * 100,
         }
         logging.info("Weather data processed successfully.")
         return weather_data
@@ -127,14 +161,18 @@ def generate_display_image(weather_data):
         if icon_image:
             template.paste(icon_image, (40, 15))
 
+        # Unit suffix based on UNITS setting
+        temp_unit = "°C" if UNITS == "metric" else "°F"
+        wind_unit = "m/s" if UNITS == "metric" else "MPH"
+
         draw.text((30, 200), f"Now: {weather_data['report']}", font=font22, fill=COLORS['black'])
         draw.text((30, 240), f"Precip: {weather_data['precip_percent']:.0f}%", font=font30, fill=COLORS['black'])
-        draw.text((375, 35), f"{weather_data['temp_current']:.0f}°F", font=font160, fill=COLORS['black'])
-        draw.text((350, 210), f"Feels like: {weather_data['feels_like']:.0f}°F", font=font50, fill=COLORS['black'])
-        draw.text((35, 325), f"High: {weather_data['temp_max']:.0f}°F", font=font50, fill=COLORS['black'])
-        draw.text((35, 390), f"Low: {weather_data['temp_min']:.0f}°F", font=font50, fill=COLORS['black'])
+        draw.text((375, 35), f"{weather_data['temp_current']:.0f}{temp_unit}", font=font160, fill=COLORS['black'])
+        draw.text((350, 210), f"Feels like: {weather_data['feels_like']:.0f}{temp_unit}", font=font50, fill=COLORS['black'])
+        draw.text((35, 325), f"High: {weather_data['temp_max']:.0f}{temp_unit}", font=font50, fill=COLORS['black'])
+        draw.text((35, 390), f"Low: {weather_data['temp_min']:.0f}{temp_unit}", font=font50, fill=COLORS['black'])
         draw.text((345, 340), f"Humidity: {weather_data['humidity']}%", font=font30, fill=COLORS['black'])
-        draw.text((345, 400), f"Wind: {weather_data['wind']:.1f} MPH", font=font30, fill=COLORS['black'])
+        draw.text((345, 400), f"Wind: {weather_data['wind']:.1f} {wind_unit}", font=font30, fill=COLORS['black'])
         draw.text((627, 330), "UPDATED", font=font35, fill=COLORS['white'])
         current_time = datetime.now().strftime('%H:%M')
         draw.text((627, 375), current_time, font=font60, fill=COLORS['white'])
@@ -165,8 +203,9 @@ def display_image(image):
 # Main function
 def main():
     try:
-        data = fetch_weather_data()
-        weather_data = process_weather_data(data)
+        current_data = fetch_current_weather()
+        forecast_data = fetch_forecast()
+        weather_data = process_weather_data(current_data, forecast_data)
         save_to_csv(weather_data)
         image = generate_display_image(weather_data)
         display_image(image)
